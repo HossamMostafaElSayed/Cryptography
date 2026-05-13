@@ -1,0 +1,11 @@
+# Cryptography Lib Lab Project - Requirements
+# =============================================
+
+# Core cryptographic library
+pycryptodome==3.20.0
+
+# Note: tkinter is included with Python standard library
+# If tkinter is not available on your system:
+# - Ubuntu/Debian: sudo apt-get install python3-tk
+# - macOS: brew install python-tk@3.x
+# - Windows: Select tcl/tk during Python installation
