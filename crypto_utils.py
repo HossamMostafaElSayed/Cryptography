@@ -53,7 +53,11 @@ class CryptoUtils:
             message: Message to log
         """
         self.execution_log.append(message)
-        print(message)
+        try:
+            print(message)
+        except Exception:
+            # Suppress console output errors in GUI mode (Windows)
+            pass
 
     def get_logs(self) -> str:
         """
@@ -502,7 +506,8 @@ class CryptoUtils:
             'encrypted_aes_key': self.encode_base64(encrypted_aes_key),
             'ciphertext_size': len(ciphertext),
             'original_size': len(plaintext),
-            'compression_ratio': (1 - len(ciphertext) / len(plaintext)) * 100
+            'compression_ratio': (1 - len(ciphertext) / len(plaintext)) * 100,
+            'original_file_hash': self.calculate_sha256_hash(plaintext)
         }
 
         # Save metadata to JSON file

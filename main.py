@@ -554,26 +554,73 @@ class CryptoLabGUI:
                 output_dir="output"
             )
 
-            # Verify integrity if original file is available
+            # Get file sizes and hashes from metadata
             original_size = metadata.get('original_size', 0)
             encrypted_size = metadata.get('ciphertext_size', 0)
+            original_file_hash = metadata.get('original_file_hash', None)
 
             self.crypto.log_message("\n[*] Decryption Summary:")
             self.crypto.log_message(f"[+] Original size: {original_size:,} bytes")
             self.crypto.log_message(f"[+] Encrypted size: {encrypted_size:,} bytes")
             self.crypto.log_message(f"[+] Decrypted file: {decrypted_file}")
 
+            # Perform integrity verification using SHA-256
+            self.crypto.log_message("\n[*] File Integrity Verification:")
+            decrypted_file_hash = self.crypto.calculate_file_hash(decrypted_file)
+            self.crypto.log_message(f"[+] Original file SHA-256:  {original_file_hash}")
+            self.crypto.log_message(f"[+] Decrypted file SHA-256: {decrypted_file_hash}")
+
+            if original_file_hash and original_file_hash == decrypted_file_hash:
+                self.crypto.log_message(f"\n[+] ✓ INTEGRITY VERIFIED: Decrypted file matches original!")
+                verification_result = "✓ INTEGRITY VERIFIED"
+                verification_success = True
+            else:
+                if not original_file_hash:
+                    self.crypto.log_message(f"\n[!] WARNING: Original file hash not available in metadata")
+                    verification_result = "⚠ Hash comparison unavailable"
+                    verification_success = None
+                else:
+                    self.crypto.log_message(f"\n[!] ✗ INTEGRITY FAILED: Decrypted file does NOT match original!")
+                    verification_result = "✗ INTEGRITY FAILED"
+                    verification_success = False
+
             self.display_logs()
             self.update_status("✓ Decryption completed successfully!")
             dialog_window.destroy()
 
-            messagebox.showinfo(
-                "Success",
-                f"Decryption Completed!\n\n"
-                f"Decrypted file: {decrypted_file}\n\n"
-                f"Original size: {original_size:,} bytes\n"
-                f"Encrypted size: {encrypted_size:,} bytes"
-            )
+            # Show detailed message based on verification result
+            if verification_success is True:
+                messagebox.showinfo(
+                    "Decryption & Verification Successful",
+                    f"✓ Decryption Completed Successfully!\n\n"
+                    f"Decrypted file: {decrypted_file}\n\n"
+                    f"Original size: {original_size:,} bytes\n"
+                    f"Encrypted size: {encrypted_size:,} bytes\n\n"
+                    f"✓ File Integrity Verified:\n"
+                    f"SHA-256 Match: YES\n\n"
+                    f"The decrypted file is identical to the original!"
+                )
+            elif verification_success is False:
+                messagebox.showwarning(
+                    "Decryption Completed - Integrity Warning",
+                    f"Decryption Completed!\n\n"
+                    f"Decrypted file: {decrypted_file}\n\n"
+                    f"Original size: {original_size:,} bytes\n"
+                    f"Encrypted size: {encrypted_size:,} bytes\n\n"
+                    f"⚠ INTEGRITY CHECK FAILED:\n"
+                    f"SHA-256 Mismatch: The decrypted file does NOT match the original!\n\n"
+                    f"This may indicate corruption or tampering."
+                )
+            else:
+                messagebox.showinfo(
+                    "Decryption Completed",
+                    f"Decryption Completed!\n\n"
+                    f"Decrypted file: {decrypted_file}\n\n"
+                    f"Original size: {original_size:,} bytes\n"
+                    f"Encrypted size: {encrypted_size:,} bytes\n\n"
+                    f"Note: Original file hash not available in metadata.\n"
+                    f"Decrypted file SHA-256: {decrypted_file_hash}"
+                )
 
         except Exception as e:
             self.update_status(f"✗ Error: {str(e)}")
