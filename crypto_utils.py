@@ -15,6 +15,9 @@ Date: May 2026
 
 import os
 import time
+import json
+import csv
+import random
 import hashlib
 import base64
 from pathlib import Path
@@ -393,6 +396,51 @@ class CryptoUtils:
         except IOError as e:
             raise IOError(f"Error writing file {file_path}: {str(e)}")
 
+    # ==================== METADATA MANAGEMENT ====================
+
+    def save_metadata(self, metadata: Dict, output_dir: str = "output", filename: str = "encryption_metadata.json") -> str:
+        """
+        Save encryption metadata to JSON file for later decryption.
+        
+        Args:
+            metadata: Dictionary containing encryption metadata
+            output_dir: Directory to save metadata
+            filename: Name of metadata file
+            
+        Returns:
+            Path to metadata file
+        """
+        Path(output_dir).mkdir(exist_ok=True)
+        metadata_path = os.path.join(output_dir, filename)
+        
+        try:
+            with open(metadata_path, 'w', encoding='utf-8') as f:
+                json.dump(metadata, f, indent=2)
+            self.log_message(f"[+] Metadata saved to: {metadata_path}")
+            return metadata_path
+        except IOError as e:
+            raise IOError(f"Error saving metadata: {str(e)}")
+
+    def load_metadata(self, metadata_path: str) -> Dict:
+        """
+        Load encryption metadata from JSON file.
+        
+        Args:
+            metadata_path: Path to metadata JSON file
+            
+        Returns:
+            Dictionary containing encryption metadata
+        """
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+            self.log_message(f"[+] Metadata loaded from: {metadata_path}")
+            return metadata
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Metadata file not found: {metadata_path}")
+        except json.JSONDecodeError:
+            raise ValueError(f"Invalid metadata file format: {metadata_path}")
+
     # ==================== HIGH-LEVEL WORKFLOWS ====================
 
     def hybrid_encrypt_file(self, input_file: str, output_dir: str = "output") -> Dict:
@@ -456,6 +504,9 @@ class CryptoUtils:
             'original_size': len(plaintext),
             'compression_ratio': (1 - len(ciphertext) / len(plaintext)) * 100
         }
+
+        # Save metadata to JSON file
+        self.save_metadata(metadata, output_dir)
 
         self.log_message(f"[+] Ciphertext size: {len(ciphertext)} bytes")
         self.log_message(f"[+] Encryption saved to: {encrypted_file}")

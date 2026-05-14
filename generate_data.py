@@ -13,13 +13,14 @@ import random
 from pathlib import Path
 
 
-def generate_student_data(output_file: str = "data/original_data.csv", num_records: int = 10):
+def generate_student_data(output_file: str = "data/original_data.csv", num_records: int = 10, silent: bool = False):
     """
     Generate sample student records and save to CSV file.
     
     Args:
         output_file: Path to output CSV file
         num_records: Number of student records to generate
+        silent: If True, suppress console output (for GUI use)
     """
     # Sample data
     first_names = [
@@ -56,21 +57,23 @@ def generate_student_data(output_file: str = "data/original_data.csv", num_recor
             writer.writeheader()
             writer.writerows(records)
 
-        print(f"✓ Student data generated successfully!")
-        print(f"  File: {output_file}")
-        print(f"  Records: {num_records}")
-        print(f"  File size: {Path(output_file).stat().st_size:,} bytes")
-        print("\nSample data:")
-        print("-" * 60)
-        print(f"{'ID':<10} {'Name':<30} {'Grade':<10}")
-        print("-" * 60)
-        for record in records[:5]:
-            print(f"{record['ID']:<10} {record['Name']:<30} {record['Grade']:<10}")
-        if num_records > 5:
-            print(f"... and {num_records - 5} more records")
+        if not silent:
+            print(f"✓ Student data generated successfully!")
+            print(f"  File: {output_file}")
+            print(f"  Records: {num_records}")
+            print(f"  File size: {Path(output_file).stat().st_size:,} bytes")
+            print("\nSample data:")
+            print("-" * 60)
+            print(f"{'ID':<10} {'Name':<30} {'Grade':<10}")
+            print("-" * 60)
+            for record in records[:5]:
+                print(f"{record['ID']:<10} {record['Name']:<30} {record['Grade']:<10}")
+            if num_records > 5:
+                print(f"... and {num_records - 5} more records")
 
     except IOError as e:
-        print(f"✗ Error writing to file: {e}")
+        if not silent:
+            print(f"✗ Error writing to file: {e}")
         return False
 
     return True
